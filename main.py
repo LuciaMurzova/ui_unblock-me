@@ -2,18 +2,9 @@ from copy import deepcopy
 from dataclasses import dataclass
 import random
 from numpy import *
+import constant
 
-# rozmery hracej plochy  0 - X-1
-VELKOST_R = 5
-VELKOST_S = 5
-hracia_plocha = [[0 for i in range(VELKOST_R)] for j in range(VELKOST_S)]
-
-# usporiadanie dat pre auta v poli stav
-MENO = 0
-DLZKA = 1
-POLOHA_R = 2
-POLOHA_S = 3
-SMER = 4
+hracia_plocha = [[0 for i in range(constant.VELKOST_R)] for j in range(constant.VELKOST_S)]
 
 POCET_AUT = 0
 
@@ -21,7 +12,7 @@ POCET_AUT = 0
 @dataclass
 class Uzol:
     stav = []
-    plocha = [[0 for i in range(VELKOST_R)] for j in range(VELKOST_S)]
+    plocha = [[0 for i in range(constant.VELKOST_R)] for j in range(constant.VELKOST_S)]
     potomok_l = None
     potomok_p = None
     rodic = None
@@ -32,14 +23,14 @@ class Uzol:
 
 
 def vypis_plochu():
-    for riadok in range(VELKOST_R):
-        for stlpec in range(VELKOST_S):
+    for riadok in range(constant.VELKOST_R):
+        for stlpec in range(constant.VELKOST_S):
             print(hracia_plocha[riadok][stlpec], end=' ')
         print('')
 
 
 def nacitaj_vstup():
-    global POCET_AUT
+    global POCET_AUT, hracia_plocha
     zaciatocny_stav = []
 
     with open('stav.txt', 'r') as file1:
@@ -47,27 +38,26 @@ def nacitaj_vstup():
         file1.close()
 
     POCET_AUT = len(zaciatocny_stav)
-    global hracia_plocha
 
     for auto in zaciatocny_stav:
+        auto[constant.DLZKA] = int(auto[constant.DLZKA])
+        auto[constant.POLOHA_R] = int(auto[constant.POLOHA_R])
+        auto[constant.POLOHA_S] = int(auto[constant.POLOHA_S])
+
         # ak pri zapisovani auta na poziciu tam uz nie je 0, na vstupe boli zadane auta nespravne
-        auto[DLZKA] = int(auto[DLZKA])
-        auto[POLOHA_R] = int(auto[POLOHA_R])
-        auto[POLOHA_S] = int(auto[POLOHA_S])
-
-        if auto[SMER] == 'h':
-            for stlpec in range(int(auto[DLZKA])):
-                if hracia_plocha[int(auto[POLOHA_R])][int(auto[POLOHA_S]) + stlpec] != 0:
+        if auto[constant.SMER] == 'h':
+            for stlpec in range(auto[constant.DLZKA]):
+                if hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] + stlpec] != 0:
                     print('kolizia aut')
                     exit()
-                hracia_plocha[int(auto[POLOHA_R])][int(auto[POLOHA_S]) + stlpec] = auto[MENO][0]
+                hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] + stlpec] = auto[constant.MENO][0]
 
-        elif auto[SMER] == 'v':
-            for riadok in range(int(auto[DLZKA])):
-                if hracia_plocha[int(auto[POLOHA_R]) + riadok][int(auto[POLOHA_S])] != 0:
+        elif auto[constant.SMER] == 'v':
+            for riadok in range(auto[constant.DLZKA]):
+                if hracia_plocha[auto[constant.POLOHA_R] + riadok][auto[constant.POLOHA_S]] != 0:
                     print('kolizia aut')
                     exit()
-                hracia_plocha[int(auto[POLOHA_R]) + riadok][int(auto[POLOHA_S])] = auto[MENO][0]
+                hracia_plocha[auto[constant.POLOHA_R] + riadok][auto[constant.POLOHA_S]] = auto[constant.MENO][0]
 
         print()
 
@@ -88,40 +78,40 @@ def posun_auto(auto, smer: int, pocet_posunuti: int):
     #hore
     if smer == 1:
         for posunutie in range(pocet_posunuti):
-            print('posuvam hore', auto[POLOHA_R], auto[POLOHA_S], posunutie )
-            hracia_plocha[auto[POLOHA_R]-1][auto[POLOHA_S]] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R]+auto[DLZKA]-1][auto[POLOHA_S]] = 0
-            auto[POLOHA_R] -= 1
-            print(auto[POLOHA_R])
+            print('posuvam hore', auto[constant.POLOHA_R], auto[constant.POLOHA_S], posunutie )
+            hracia_plocha[auto[constant.POLOHA_R]-1][auto[constant.POLOHA_S]] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]+auto[constant.DLZKA]-1][auto[constant.POLOHA_S]] = 0
+            auto[constant.POLOHA_R] -= 1
+            print(auto[constant.POLOHA_R])
             vypis_plochu()
         return
 
     # vpravo
     if smer == 2:
         for posunutie in range(pocet_posunuti):
-            print('posuvam doprava', auto[POLOHA_S] + auto[DLZKA])
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] + auto[DLZKA]] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S]] = 0
-            auto[POLOHA_S] += 1
-            print(auto[POLOHA_S])
+            print('posuvam doprava', auto[constant.POLOHA_S] + auto[constant.DLZKA])
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] + auto[constant.DLZKA]] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S]] = 0
+            auto[constant.POLOHA_S] += 1
+            print(auto[constant.POLOHA_S])
         return
     # dole
     if smer == 3:
         for posunutie in range(pocet_posunuti):
-            print('posuvam dole', int(auto[POLOHA_R])+int(auto[DLZKA]))
-            hracia_plocha[int(auto[POLOHA_R])+int(auto[DLZKA])][int(auto[POLOHA_S])] = auto[MENO][0]
-            hracia_plocha[int(auto[POLOHA_R])][int(auto[POLOHA_S])] = 0
-            auto[POLOHA_R] += 1
-            print(auto[POLOHA_R])
+            print('posuvam dole', int(auto[constant.POLOHA_R])+int(auto[constant.DLZKA]))
+            hracia_plocha[int(auto[constant.POLOHA_R])+int(auto[constant.DLZKA])][int(auto[constant.POLOHA_S])] = auto[constant.MENO][0]
+            hracia_plocha[int(auto[constant.POLOHA_R])][int(auto[constant.POLOHA_S])] = 0
+            auto[constant.POLOHA_R] += 1
+            print(auto[constant.POLOHA_R])
         return
     # vlavo
     if smer == 4:
         for posunutie in range(pocet_posunuti):
-            print('posuvam dolava', auto[POLOHA_S] + auto[DLZKA])
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S]-1] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S]-1 + auto[DLZKA]] = 0
-            auto[POLOHA_S] -= 1
-            print(auto[POLOHA_S])
+            print('posuvam dolava', auto[constant.POLOHA_S] + auto[constant.DLZKA])
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S]-1] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S]-1 + auto[constant.DLZKA]] = 0
+            auto[constant.POLOHA_S] -= 1
+            print(auto[constant.POLOHA_S])
         return
 
 
@@ -134,7 +124,7 @@ def posun_auto1(uzol: Uzol):
 
     for auta in uzol.stav:
         print(uzol.pohyb_f, auta)
-        if auta[MENO] == uzol.pohyb_f:
+        if auta[constant.MENO] == uzol.pohyb_f:
             auto = auta
             break
         return
@@ -143,40 +133,40 @@ def posun_auto1(uzol: Uzol):
     # hore
     if smer == 1:
         for posunutie in range(pocet_posunuti):
-            print('posuvam hore', auto[POLOHA_R], auto[POLOHA_S], posunutie)
-            hracia_plocha[auto[POLOHA_R] - 1][auto[POLOHA_S]] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R] + auto[DLZKA] - 1][auto[POLOHA_S]] = 0
-            auto[POLOHA_R] -= 1
-            print(auto[POLOHA_R])
+            print('posuvam hore', auto[constant.POLOHA_R], auto[constant.POLOHA_S], posunutie)
+            hracia_plocha[auto[constant.POLOHA_R] - 1][auto[constant.POLOHA_S]] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R] + auto[constant.DLZKA] - 1][auto[constant.POLOHA_S]] = 0
+            auto[constant.POLOHA_R] -= 1
+            print(auto[constant.POLOHA_R])
             vypis_plochu()
         return
 
     # vpravo
     if smer == 2:
         for posunutie in range(pocet_posunuti):
-            print('posuvam doprava', auto[POLOHA_S] + auto[DLZKA])
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] + auto[DLZKA]] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S]] = 0
-            auto[POLOHA_S] += 1
-            print(auto[POLOHA_S])
+            print('posuvam doprava', auto[constant.POLOHA_S] + auto[constant.DLZKA])
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] + auto[constant.DLZKA]] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S]] = 0
+            auto[constant.POLOHA_S] += 1
+            print(auto[constant.POLOHA_S])
         return
     # dole
     if smer == 3:
         for posunutie in range(pocet_posunuti):
-            print('posuvam dole', int(auto[POLOHA_R]) + int(auto[DLZKA]))
-            hracia_plocha[int(auto[POLOHA_R]) + int(auto[DLZKA])][int(auto[POLOHA_S])] = auto[MENO][0]
-            hracia_plocha[int(auto[POLOHA_R])][int(auto[POLOHA_S])] = 0
-            auto[POLOHA_R] += 1
-            print(auto[POLOHA_R])
+            print('posuvam dole', auto[constant.POLOHA_R] + auto[constant.DLZKA])
+            hracia_plocha[auto[constant.POLOHA_R] + auto[constant.DLZKA]][auto[constant.POLOHA_S]] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S]] = 0
+            auto[constant.POLOHA_R] += 1
+            print(auto[constant.POLOHA_R])
         return
     # vlavo
     if smer == 4:
         for posunutie in range(pocet_posunuti):
-            print('posuvam dolava', auto[POLOHA_S] + auto[DLZKA])
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] - 1] = auto[MENO][0]
-            hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] - 1 + auto[DLZKA]] = 0
-            auto[POLOHA_S] -= 1
-            print(auto[POLOHA_S])
+            print('posuvam dolava', auto[constant.POLOHA_S] + auto[constant.DLZKA])
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] - 1] = auto[constant.MENO][0]
+            hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] - 1 + auto[constant.DLZKA]] = 0
+            auto[constant.POLOHA_S] -= 1
+            print(auto[constant.POLOHA_S])
         return
 
 
@@ -190,47 +180,47 @@ def generuj_stav(uzol: Uzol):
     print("NAHODNE: ", nahodne_poradie)
 
     for auto in nahodne_poradie:
-        print(f"zistujem moznost {auto[MENO]}")
-        if auto[SMER] == 'h':  # posuva sa doprava a dolava
+        print(f"zistujem moznost {auto[constant.MENO]}")
+        if auto[constant.SMER] == 'h':  # posuva sa doprava a dolava
             # doprava    # pole hned vedla auta je volne, zisti o ko2ko najviac sa vie posunut
-            for pole in range(VELKOST_S-1 - (int(auto[POLOHA_S])+int(auto[DLZKA])-1)):
-                if auto[POLOHA_S] + pole < VELKOST_S and hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] + pole] == 0:
+            for pole in range(constant.VELKOST_S-1 - (auto[constant.POLOHA_S]+auto[constant.DLZKA]-1)):
+                if auto[constant.POLOHA_S] + pole < constant.VELKOST_S and hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] + pole] == 0:
                     uzol.pohyb_d += 1
-                    auto[POLOHA_S] += 1
+                    auto[constant.POLOHA_S] += 1
             if uzol.pohyb_d != 0:
-                uzol.pohyb_f = auto[MENO]
+                uzol.pohyb_f = auto[constant.MENO]
                 uzol.pohyb_s = 2
                 break
 
             # dolava
-            for pole in range(auto[POLOHA_S] + 1):
-                if auto[POLOHA_S] - pole >= 0 and hracia_plocha[auto[POLOHA_R]][auto[POLOHA_S] - pole] == 0:
+            for pole in range(auto[constant.POLOHA_S] + 1):
+                if auto[constant.POLOHA_S] - pole >= 0 and hracia_plocha[auto[constant.POLOHA_R]][auto[constant.POLOHA_S] - pole] == 0:
                     uzol.pohyb_d += 1
-                    auto[POLOHA_S] -= 1
+                    auto[constant.POLOHA_S] -= 1
             if uzol.pohyb_d != 0:
-                uzol.pohyb_f = auto[MENO]
+                uzol.pohyb_f = auto[constant.MENO]
                 uzol.pohyb_s = 4
                 break
 
-        elif auto[SMER] == 'v':  # posuva sa hore a dole
+        elif auto[constant.SMER] == 'v':  # posuva sa hore a dole
             # dole
-            for pole in range(VELKOST_R-1 - (auto[POLOHA_R]+auto[DLZKA]-1)):
-                if auto[POLOHA_R] + auto[DLZKA] + pole < VELKOST_R and \
-                        hracia_plocha[auto[POLOHA_R] + auto[DLZKA] + pole][auto[POLOHA_S]] == 0:
+            for pole in range(constant.VELKOST_R-1 - (auto[constant.POLOHA_R]+auto[constant.DLZKA]-1)):
+                if auto[constant.POLOHA_R] + auto[constant.DLZKA] + pole < constant.VELKOST_R and \
+                        hracia_plocha[auto[constant.POLOHA_R] + auto[constant.DLZKA] + pole][auto[constant.POLOHA_S]] == 0:
                     uzol.pohyb_d += 1
-                    auto[POLOHA_R] += 1
+                    auto[constant.POLOHA_R] += 1
             if uzol.pohyb_d != 0:
-                uzol.pohyb_f = auto[MENO]
+                uzol.pohyb_f = auto[constant.MENO]
                 uzol.pohyb_s = 3
                 break
 
             # hore
-            for pole in range(auto[POLOHA_R] + 1):
-                if auto[POLOHA_R] - pole >= 0 and hracia_plocha[auto[POLOHA_R] - pole][auto[POLOHA_S]] == 0:
+            for pole in range(auto[constant.POLOHA_R] + 1):
+                if auto[constant.POLOHA_R] - pole >= 0 and hracia_plocha[auto[constant.POLOHA_R] - pole][auto[constant.POLOHA_S]] == 0:
                     uzol.pohyb_d += 1
-                    auto[POLOHA_R] -= 1
+                    auto[constant.POLOHA_R] -= 1
             if uzol.pohyb_d != 0:
-                uzol.pohyb_f = auto[MENO]
+                uzol.pohyb_f = auto[constant.MENO]
                 uzol.pohyb_s = 1
                 break
 
@@ -253,7 +243,7 @@ def novy_uzol(rodic: Uzol):
 def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
     # prejde pole ulozenych aut, porovnava polohy cerveneho s cielovou
     for auto in aktualny_uzol.stav:
-        if auto[MENO] == 'cervene' and (int(auto[POLOHA_S]) + int(auto[DLZKA])-1) == VELKOST_S-1:
+        if auto[constant.MENO] == 'cervene' and (auto[constant.POLOHA_S] + auto[constant.DLZKA]-1) == constant.VELKOST_S-1:
             print("cervene je v cieli")
             return True
 
@@ -285,6 +275,8 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
 
 
 if __name__ == '__main__':
+    global koren
+
     koren = nacitaj_vstup()
 
     k: int = 20
