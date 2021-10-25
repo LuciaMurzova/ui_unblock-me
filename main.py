@@ -2,6 +2,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from numpy import *
 import const
+import time
 
 #hracia_plocha = [[0 for i in range(const.VELKOST_R)] for j in range(const.VELKOST_S)]
 
@@ -260,8 +261,12 @@ def generuj_stavy(uzol: Uzol):
 def novy_uzol(rodic: Uzol):
     potomok = Uzol(rodic.hlbka_uzla+1, None, 0, 0)
     potomok.rodic = rodic
-    potomok.stav = deepcopy(rodic.stav)
-    potomok.plocha = deepcopy(rodic.plocha)
+    #potomok.stav = deepcopy(rodic.stav)
+    #potomok.plocha = deepcopy(rodic.plocha)
+    potomok.stav = [row[:] for row in rodic.stav]
+    #print(potomok.stav)
+    potomok.plocha = [row[:] for row in rodic.plocha]
+
     potomok.potomkovia = []
     return potomok
 
@@ -282,45 +287,48 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
         return None
 
     # print(f"som v hlbke {aktualny_uzol.hlbka_uzla}")
-    # vypis_plochu(aktualny_uzol.plocha)
+    #print(())
+    #vypis_plochu(aktualny_uzol.plocha)
 
     generuj_stavy(aktualny_uzol)
+    posunute = 0
     # ulozi vsetkych moznych potomkov do pola, treba toto pole prejst a kontrolovat
     for potomok in aktualny_uzol.potomkovia:
-        for auta in potomok.stav:
-            if auta[const.MENO] == potomok.pohyb_f:
-                auto = auta
-
-        posun_auto1(auto, potomok)
+        for auto in potomok.stav:
+            if auto[const.MENO] == potomok.pohyb_f:
+                posun_auto1(auto, potomok)
+                posunute = 1
+                break
+        if posunute == 0: print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         #print(f"upravene polohy {auto[const.POLOHA_R]} {auto[const.POLOHA_S]}")
         #print('idem kontrolovat ', potomok)
 
         kontrolovany = aktualny_uzol
         rovnaky = 0
-
+        #print("MIMO", potomok.stav, kontrolovany.stav)
         while kontrolovany.rodic is not None:
-            if potomok.stav == kontrolovany.rodic.stav:
+            #print("kontrolujem rovnakych ")
+            if potomok.stav == kontrolovany.stav or potomok.stav == kontrolovany.rodic.stav:
                 #print('rovnaky', potomok.stav, kontrolovany.rodic.stav)
                 rovnaky = 1
                 break
             kontrolovany = kontrolovany.rodic
 
         if rovnaky == 0:
+            #print('idem kontrolovat ', potomok)
             hladaj_ciel(potomok, max_hlbka)
 
             if cielovy_stav is not None:
                 #print("MAME CIEL ", cielovy_stav)
                 return
         #posun_auto_spat(auto, potomok)
+        #print("PRED ", potomok)
+        #aktualny_uzol.potomkovia[aktualny_uzol.potomkovia.index(potomok)] = None
+        aktualny_uzol.potomkovia.remove(potomok)
+        #potomok = None
+        #print("PO ", potomok)
 
-        aktualny_uzol.potomkovia[aktualny_uzol.potomkovia.index(potomok)] = None
-
-
-def vypis_strom(uzol: Uzol):
-    if uzol is not None:
-        print(f"{uzol.pohyb_f} {uzol.pohyb_s} {uzol.pohyb_d}")
-        vypis_strom(uzol.potomok_l)
-        vypis_strom(uzol.potomok_p)
+        #aktualny_uzol.potomkovia.pop(potomok)
 
 
 def vypis_cestu(uzol: Uzol):
@@ -332,7 +340,7 @@ def vypis_cestu(uzol: Uzol):
 
 if __name__ == '__main__':
     k: int = 1
-
+    start_time = time.time()
     zaciatocny_stav = nacitaj_vstup()
     while True:
         # skontorlovat ci nejde o finalny stav
@@ -343,7 +351,7 @@ if __name__ == '__main__':
         hladaj_ciel(zaciatocny_stav, k)
         print("CIEL", cielovy_stav)
             # treba vypisat vsetky kroky od korena po vysledok
-        if cielovy_stav is not None or k == 10:
+        if cielovy_stav is not None :
             print("-----------------HOTOVO---------------")
             print("UZLY: ", pocet_uzlov, k)
             break
@@ -351,7 +359,7 @@ if __name__ == '__main__':
         k += 1
 
     print("UZLY: ", pocet_uzlov, k)
-
+    print("--- %s seconds ---" % (time.time() - start_time))
     vypis_cestu(cielovy_stav)
     #print("idem vypisovat strom")
     #vypis_plochu(koren.plocha)
