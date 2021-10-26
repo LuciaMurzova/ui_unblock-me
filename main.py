@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from numpy import *
 import const
@@ -8,7 +9,7 @@ import time
 POCET_AUT = 0
 pocet_uzlov = 0
 cielovy_stav = None
-
+#nespracovane = []
 
 @dataclass
 class Uzol:
@@ -64,119 +65,114 @@ def nacitaj_vstup():
     return zaciatocny_uzol
 
 
-def posun_auto1(auto, uzol: Uzol):
-    # upravi hraciu plochu a poziciu auta
-    smer = uzol.pohyb_s
-    pocet_posunuti = uzol.pohyb_d
+def vykonaj_posun_vlavo(auto_rodica, uzol: Uzol):
+    # do funkcie prislo auto zo stavu rodica, je ho potrebne vymanit za auto aktualneho uzla
+    for nove_auta in uzol.stav:
+        if nove_auta == auto_rodica:
+            auto = nove_auta
 
-    # print(f"FUNKCIA POSUN 1, smer {smer}, pocet {pocet_posunuti}, {auto}")
-    # hore
-    if smer == 1:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam hore', auto[const.POLOHA_R], auto[const.POLOHA_S], posunutie, pocet_posunuti)
-            uzol.plocha[auto[const.POLOHA_R] - 1][auto[const.POLOHA_S]] = auto[const.MENO][0]
-            uzol.plocha[auto[const.POLOHA_R] + auto[const.DLZKA] - 1][auto[const.POLOHA_S]] = 0
-            auto[const.POLOHA_R] -= 1
-            #print(auto[const.POLOHA_R])
-            #vypis_plochu(uzol.plocha)
-        return
-
-    # vpravo
-    if smer == 2:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam doprava', auto[const.POLOHA_S] + auto[const.DLZKA], pocet_posunuti)
-            uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] + auto[const.DLZKA]] = auto[const.MENO][0]
-            uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
-            auto[const.POLOHA_S] += 1
-            #print(auto[const.POLOHA_S])
-            #vypis_plochu(uzol.plocha)
-        return
-    # dole
-    if smer == 3:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam dole', auto[const.POLOHA_R] + auto[const.DLZKA], pocet_posunuti)
-            uzol.plocha[auto[const.POLOHA_R] + auto[const.DLZKA]][auto[const.POLOHA_S]] = auto[const.MENO][0]
-            uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
-            auto[const.POLOHA_R] += 1
-            #print(auto[const.POLOHA_R])
-            #vypis_plochu(uzol.plocha)
-        return
-    # vlavo
-    if smer == 4:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam dolava', uzol.pohyb_d, pocet_posunuti)
-            uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1] = auto[const.MENO][0]
-            uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1 + auto[const.DLZKA]] = 0
-            auto[const.POLOHA_S] -= 1
-            #print(auto[const.POLOHA_S])
-            #vypis_plochu(uzol.plocha)
-        return
+    for posunutie in range(uzol.pohyb_d):
+        uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1] = auto[const.MENO][0]
+        uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1 + auto[const.DLZKA]] = 0
+        auto[const.POLOHA_S] -= 1
 
 
 def over_posun_vlavo(auto, uzol: Uzol):
     for pole in range(auto[const.POLOHA_S]):
-        #print(f"zistujem posun vlavo 1 - {auto[const.POLOHA_S] + pole + auto[const.DLZKA]}")
-        if auto[const.POLOHA_S] - (pole+1) >= 0 and uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]-(pole+1)] == 0:
+        if auto[const.POLOHA_S] - (pole+1) >= 0 and \
+                uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]-(pole+1)] == 0:
             potomok = novy_uzol(uzol)
             potomok.pohyb_f = auto[const.MENO]
             potomok.pohyb_s = 4
             potomok.pohyb_d = pole + 1
-            #print(f'OVER - POSUVAM {potomok.pohyb_d}')
-            # vykonaj_posun_vpravo(auto, potomok)
+            vykonaj_posun_vlavo(auto, potomok)
             uzol.potomkovia.append(potomok)
-            #print(uzol.potomkovia)
+           # nespracovane.append(potomok)
+            #print('pridavam', potomok, potomok.stav)
         else:
             return
 
 
+def vykonaj_posun_vpravo(auto_rodica, uzol: Uzol):
+    # do funkcie prislo auto zo stavu rodica, je ho potrebne vymanit za auto aktualneho uzla
+    for nove_auta in uzol.stav:
+        if nove_auta == auto_rodica:
+            auto = nove_auta
+
+    for posunutie in range(uzol.pohyb_d):
+        uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] + auto[const.DLZKA]] = auto[const.MENO][0]
+        uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
+        auto[const.POLOHA_S] += 1
+
+
 def over_posun_vpravo(auto, uzol: Uzol):
     for pole in range(const.VELKOST_S-1 - (auto[const.POLOHA_S] + auto[const.DLZKA] - 1)):
-        #print(f"zistujem posun vpravo {auto[const.POLOHA_S]} {pole} {uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] + pole + auto[const.DLZKA]]}")
         if auto[const.POLOHA_S] + pole + auto[const.DLZKA] < const.VELKOST_S and \
                 uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] + pole + auto[const.DLZKA]] == 0:
             potomok = novy_uzol(uzol)
             potomok.pohyb_f = auto[const.MENO]
             potomok.pohyb_s = 2
             potomok.pohyb_d = pole+1
-            #print(f'OVER - POSUVAM {potomok.pohyb_d}')
-            # vykonaj_posun_vpravo(auto, potomok)
-            #if (potomok.rodic is not None and potomok.stav == potomok.rodic) or (potomok.rodic is not None and )
+            vykonaj_posun_vpravo(auto, potomok)
             uzol.potomkovia.append(potomok)
-            #print(uzol.potomkovia)
+            #.append(potomok)
+            #print('pridavam', potomok, potomok.stav)
         else:
             return
+
+
+def vykonaj_posun_hore(auto_rodica, uzol: Uzol):
+    # do funkcie prislo auto zo stavu rodica, je ho potrebne vymanit za auto aktualneho uzla
+    for nove_auta in uzol.stav:
+        if nove_auta == auto_rodica:
+            auto = nove_auta
+
+    for posunutie in range(uzol.pohyb_d):
+        uzol.plocha[auto[const.POLOHA_R] - 1][auto[const.POLOHA_S]] = auto[const.MENO][0]
+        uzol.plocha[auto[const.POLOHA_R] + auto[const.DLZKA] - 1][auto[const.POLOHA_S]] = 0
+        auto[const.POLOHA_R] -= 1
 
 
 def over_posun_hore(auto, uzol: Uzol):
     for pole in range(auto[const.POLOHA_R]):
-        #print(f"zistujem posun hore 1 - {auto[const.POLOHA_S] + pole + auto[const.DLZKA]}")
-        if auto[const.POLOHA_R] - (pole + 1) >= 0 and \
-                uzol.plocha[auto[const.POLOHA_R] - (pole + 1)][auto[const.POLOHA_S]] == 0:
+        if auto[const.POLOHA_R] - (pole+1) >= 0 and \
+                uzol.plocha[auto[const.POLOHA_R] - (pole+1)][auto[const.POLOHA_S]] == 0:
             potomok = novy_uzol(uzol)
             potomok.pohyb_f = auto[const.MENO]
             potomok.pohyb_s = 1
             potomok.pohyb_d = pole + 1
-            #print(f'OVER - POSUVAM {potomok.pohyb_d}')
-            # vykonaj_posun_vpravo(auto, potomok)
+            vykonaj_posun_hore(auto, potomok)
             uzol.potomkovia.append(potomok)
-            #print(uzol.potomkovia)
+           # nespracovane.append(potomok)
+            #print('pridavam', potomok, potomok.stav)
         else:
             return
 
 
+def vykonaj_posun_dole(auto_rodica, uzol: Uzol):
+    # do funkcie prislo auto zo stavu rodica, je ho potrebne vymanit za auto aktualneho uzla
+    for nove_auta in uzol.stav:
+        if nove_auta == auto_rodica:
+            auto = nove_auta
+
+    for posunutie in range(uzol.pohyb_d):
+        uzol.plocha[auto[const.POLOHA_R] + auto[const.DLZKA]][auto[const.POLOHA_S]] = auto[const.MENO][0]
+        uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
+        auto[const.POLOHA_R] += 1
+
+
 def over_posun_dole(auto, uzol: Uzol):
     for pole in range(const.VELKOST_R-1 - (auto[const.POLOHA_R] + auto[const.DLZKA] - 1)):
-        #print(f"zistujem posun dole 1 - {auto[const.POLOHA_S] + pole + auto[const.DLZKA]}")
         if auto[const.POLOHA_R] + auto[const.DLZKA] + pole < const.VELKOST_R and \
                 uzol.plocha[auto[const.POLOHA_R] + auto[const.DLZKA] + pole][auto[const.POLOHA_S]] == 0:
             potomok = novy_uzol(uzol)
             potomok.pohyb_f = auto[const.MENO]
             potomok.pohyb_s = 3
             potomok.pohyb_d = pole + 1
-            #print(f'OVER - POSUVAM {potomok.pohyb_d}')
-            # vykonaj_posun_vpravo(auto, potomok)
+            vykonaj_posun_dole(auto, potomok)
             uzol.potomkovia.append(potomok)
-            #print(uzol.potomkovia)
+            #nespracovane.append(potomok)
+            #print('pridavam', potomok, potomok.stav)
         else:
             return
 
@@ -208,6 +204,10 @@ def novy_uzol(rodic: Uzol):
 def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
     global pocet_uzlov, cielovy_stav
     pocet_uzlov += 1
+
+    #print('mazem', aktualny_uzol.stav, aktualny_uzol)
+    #nespracovane.remove(aktualny_uzol)
+
     # prejde pole ulozenych aut, porovnava polohy cerveneho s cielovou
     for auto in aktualny_uzol.stav:
         if auto[const.MENO] == 'cervene' and (auto[const.POLOHA_S] + auto[const.DLZKA] - 1) == const.VELKOST_S-1:
@@ -227,22 +227,31 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
 
     # ulozi vsetkych moznych potomkov do pola, treba toto pole prejst a kontrolovat
     for potomok in aktualny_uzol.potomkovia:
-        for auto in potomok.stav:
-            if auto[const.MENO] == potomok.pohyb_f:
-                posun_auto1(auto, potomok)
-                break
+        #for auto in potomok.stav:
+        #    if auto[const.MENO] == potomok.pohyb_f:
+        #        posun_auto1(auto, potomok)
+        #        break
 
-        #print('idem kontrolovat ', potomok)
+        rovnaky = 0
+
+        if aktualny_uzol.rodic is not None and potomok.stav == aktualny_uzol.rodic.stav:
+            #print('rovnaky ', potomok.stav, len(nespracovane))
+            #nespracovane.remove(potomok)
+            rovnaky = 1
+            break
 
         kontrolovany = aktualny_uzol
-        rovnaky = 0
-        #print("MIMO", potomok.stav, kontrolovany.stav)
         while kontrolovany.rodic is not None:
             if potomok.stav == kontrolovany.rodic.stav:
+                #nespracovane.remove(potomok)
+                #print('rovnaky ', potomok.stav, len(nespracovane))
                 rovnaky = 1
                 break
-
             kontrolovany = kontrolovany.rodic
+
+        #if len(nespracovane) == 1:
+        #    print('NEMA RIESENIE')
+        #    exit()
 
         if rovnaky == 0:
             #print('idem kontrolovat ', potomok)
@@ -265,39 +274,39 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
 
 
 def vypis_cestu(uzol: Uzol):
-    if uzol.rodic is not None:
+    # v koreni nebol pohyb, nepotrebujeme ho vypisovat
+    if uzol.rodic.rodic is not None:
         vypis_cestu(uzol.rodic)
-    print(f"POHYB {uzol.pohyb_f} {uzol.pohyb_s} {uzol.pohyb_d}")
-    vypis_plochu(uzol.plocha)
+    print(f"{const.pohyb[uzol.pohyb_s-1]} {uzol.pohyb_f} {uzol.pohyb_d}")
+    #vypis_plochu(uzol.plocha)
 
 
 if __name__ == '__main__':
     k: int = 1
     start_time = time.time()
     zaciatocny_stav = nacitaj_vstup()
+
     while True:
         # skontorlovat ci nejde o finalny stav
         # skontrolovat maximalnu hlbku --- ANO --- navysujeme K a ideme od zaciatku
         #                              \---NIE --- generujeme obe deti a kontrolujeme tie
         print('????????Prehladavam s k ', k)
+        #nespracovane.clear()
+        #nespracovane.append(zaciatocny_stav)
         zaciatocny_stav.potomkovia.clear()
-
+        pocet_uzlov = 0
         hladaj_ciel(zaciatocny_stav, k)
         print("CIEL", cielovy_stav)
             # treba vypisat vsetky kroky od korena po vysledok
         if cielovy_stav is not None :
             print("-----------------HOTOVO---------------")
-            print("UZLY: ", pocet_uzlov, k)
+            print("UZLY: ", k, pocet_uzlov)
             break
+        print(k, pocet_uzlov)
 
         k += 1
 
-    print("UZLY: ", pocet_uzlov, k)
     print("--- %s seconds ---" % (time.time() - start_time))
     vypis_cestu(cielovy_stav)
-    #print("idem vypisovat strom")
-    #vypis_plochu(koren.plocha)
-    #vypis_strom(koren)
-    #print(koren)
 
-
+    exit()
