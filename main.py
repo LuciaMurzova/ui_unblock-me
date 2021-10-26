@@ -1,4 +1,3 @@
-from copy import deepcopy
 from dataclasses import dataclass
 from numpy import *
 import const
@@ -31,17 +30,16 @@ def vypis_plochu(plocha):
 
 
 def nacitaj_vstup():
-    global POCET_AUT #, hracia_plocha
-    zaciatocny_stav = []
-
-    with open('stav1.txt', 'r') as file1:
-        zaciatocny_stav = [line.split() for line in file1]
-        file1.close()
-
-    POCET_AUT = len(zaciatocny_stav)
+    global POCET_AUT
     zaciatocny_uzol: Uzol = Uzol(0, None, 0, 0)
 
-    for auto in zaciatocny_stav:
+    with open('stav1.txt', 'r') as file1:
+        zaciatocny_uzol.stav = [line.split() for line in file1]
+        file1.close()
+
+    POCET_AUT = len(zaciatocny_uzol.stav)
+
+    for auto in zaciatocny_uzol.stav:
         auto[const.DLZKA] = int(auto[const.DLZKA])
         auto[const.POLOHA_R] = int(auto[const.POLOHA_R])
         auto[const.POLOHA_S] = int(auto[const.POLOHA_S])
@@ -61,12 +59,7 @@ def nacitaj_vstup():
                     exit()
                 zaciatocny_uzol.plocha[auto[const.POLOHA_R] + riadok][auto[const.POLOHA_S]] = auto[const.MENO][0]
 
-        print()
-
     vypis_plochu(zaciatocny_uzol.plocha)
-
-    zaciatocny_uzol.stav = zaciatocny_stav
-    # zaciatocny_uzol.plocha = deepcopy(hracia_plocha)
 
     return zaciatocny_uzol
 
@@ -115,60 +108,6 @@ def posun_auto1(auto, uzol: Uzol):
             uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1] = auto[const.MENO][0]
             uzol.plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1 + auto[const.DLZKA]] = 0
             auto[const.POLOHA_S] -= 1
-            #print(auto[const.POLOHA_S])
-            #vypis_plochu(uzol.plocha)
-        return
-
-
-def posun_auto_spat(auto, uzol: Uzol):
-    # upravi hraciu plochu a poziciu auta
-    smer = uzol.pohyb_s
-    pocet_posunuti = uzol.pohyb_d
-
-    if smer == 1: smer = 3
-    elif smer == 3: smer = 1
-    elif smer == 2: smer = 4
-    elif smer == 4: smer = 2
-
-    # print(f"FUNKCIA POSUN 1, smer {smer}, pocet {pocet_posunuti}, {auto}")
-    # hore
-    if smer == 1:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam hore', auto[const.POLOHA_R], auto[const.POLOHA_S], posunutie, pocet_posunuti)
-            hracia_plocha[auto[const.POLOHA_R] - 1][auto[const.POLOHA_S]] = auto[const.MENO][0]
-            hracia_plocha[auto[const.POLOHA_R] + auto[const.DLZKA] - 1][auto[const.POLOHA_S]] = 0
-            #auto[const.POLOHA_R] -= 1
-            #print(auto[const.POLOHA_R])
-            #vypis_plochu(uzol.plocha)
-        return
-
-    # vpravo
-    if smer == 2:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam doprava', auto[const.POLOHA_S] + auto[const.DLZKA], pocet_posunuti)
-            hracia_plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] + auto[const.DLZKA]] = auto[const.MENO][0]
-            hracia_plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
-            #auto[const.POLOHA_S] += 1
-            #print(auto[const.POLOHA_S])
-            #vypis_plochu(uzol.plocha)
-        return
-    # dole
-    if smer == 3:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam dole', auto[const.POLOHA_R] + auto[const.DLZKA], pocet_posunuti)
-            hracia_plocha[auto[const.POLOHA_R] + auto[const.DLZKA]][auto[const.POLOHA_S]] = auto[const.MENO][0]
-            hracia_plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S]] = 0
-            #auto[const.POLOHA_R] += 1
-            #print(auto[const.POLOHA_R])
-            #vypis_plochu(uzol.plocha)
-        return
-    # vlavo
-    if smer == 4:
-        for posunutie in range(pocet_posunuti):
-            #print('posuvam dolava', uzol.pohyb_d, pocet_posunuti)
-            hracia_plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1] = auto[const.MENO][0]
-            hracia_plocha[auto[const.POLOHA_R]][auto[const.POLOHA_S] - 1 + auto[const.DLZKA]] = 0
-            #auto[const.POLOHA_S] -= 1
             #print(auto[const.POLOHA_S])
             #vypis_plochu(uzol.plocha)
         return
@@ -245,7 +184,6 @@ def over_posun_dole(auto, uzol: Uzol):
 def generuj_stavy(uzol: Uzol):
     # prejdem vsetky auta a ulozim vsetky ich mozne pohyby
     for auto in uzol.stav:
-        #print(f"zistujem moznost {auto[const.MENO]}")
 
         if auto[const.SMER] == 'h':  # posuva sa doprava a dolava
             over_posun_vpravo(auto, uzol)
@@ -255,18 +193,14 @@ def generuj_stavy(uzol: Uzol):
             over_posun_dole(auto, uzol)
             over_posun_hore(auto, uzol)
 
-    #print("POTOMKOVIA ", len(uzol.potomkovia), uzol.potomkovia)
+    # print("POTOMKOVIA ", len(uzol.potomkovia), uzol.potomkovia)
 
 
 def novy_uzol(rodic: Uzol):
     potomok = Uzol(rodic.hlbka_uzla+1, None, 0, 0)
     potomok.rodic = rodic
-    #potomok.stav = deepcopy(rodic.stav)
-    #potomok.plocha = deepcopy(rodic.plocha)
     potomok.stav = [row[:] for row in rodic.stav]
-    #print(potomok.stav)
     potomok.plocha = [row[:] for row in rodic.plocha]
-
     potomok.potomkovia = []
     return potomok
 
@@ -283,35 +217,31 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
 
     # je v max hlbke
     if aktualny_uzol.hlbka_uzla == max_hlbka:
-        # print(f"sme v max hlbke {max_hlbka}")
-        return None
+        #print(f"sme v max hlbke {max_hlbka} {aktualny_uzol.potomkovia}")
+        return
 
     # print(f"som v hlbke {aktualny_uzol.hlbka_uzla}")
-    #print(())
     #vypis_plochu(aktualny_uzol.plocha)
 
     generuj_stavy(aktualny_uzol)
-    posunute = 0
+
     # ulozi vsetkych moznych potomkov do pola, treba toto pole prejst a kontrolovat
     for potomok in aktualny_uzol.potomkovia:
         for auto in potomok.stav:
             if auto[const.MENO] == potomok.pohyb_f:
                 posun_auto1(auto, potomok)
-                posunute = 1
                 break
-        if posunute == 0: print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        #print(f"upravene polohy {auto[const.POLOHA_R]} {auto[const.POLOHA_S]}")
+
         #print('idem kontrolovat ', potomok)
 
         kontrolovany = aktualny_uzol
         rovnaky = 0
         #print("MIMO", potomok.stav, kontrolovany.stav)
         while kontrolovany.rodic is not None:
-            #print("kontrolujem rovnakych ")
-            if potomok.stav == kontrolovany.stav or potomok.stav == kontrolovany.rodic.stav:
-                #print('rovnaky', potomok.stav, kontrolovany.rodic.stav)
+            if potomok.stav == kontrolovany.rodic.stav:
                 rovnaky = 1
                 break
+
             kontrolovany = kontrolovany.rodic
 
         if rovnaky == 0:
@@ -319,16 +249,19 @@ def hladaj_ciel(aktualny_uzol: Uzol, max_hlbka: int):
             hladaj_ciel(potomok, max_hlbka)
 
             if cielovy_stav is not None:
-                #print("MAME CIEL ", cielovy_stav)
                 return
-        #posun_auto_spat(auto, potomok)
-        #print("PRED ", potomok)
-        #aktualny_uzol.potomkovia[aktualny_uzol.potomkovia.index(potomok)] = None
-        aktualny_uzol.potomkovia.remove(potomok)
-        #potomok = None
-        #print("PO ", potomok)
 
-        #aktualny_uzol.potomkovia.pop(potomok)
+        #for vymazat in potomok.potomkovia:
+         #   vymazat.potomkovia.clear()
+         #   vymazat.plocha.clear()
+         #   vymazat.stav.clear()
+
+        potomok.plocha.clear()
+        potomok.stav.clear()
+        potomok.potomkovia.clear()
+        aktualny_uzol.potomkovia.remove(potomok)
+
+    aktualny_uzol.potomkovia.clear()
 
 
 def vypis_cestu(uzol: Uzol):
@@ -348,6 +281,7 @@ if __name__ == '__main__':
         #                              \---NIE --- generujeme obe deti a kontrolujeme tie
         print('????????Prehladavam s k ', k)
         zaciatocny_stav.potomkovia.clear()
+
         hladaj_ciel(zaciatocny_stav, k)
         print("CIEL", cielovy_stav)
             # treba vypisat vsetky kroky od korena po vysledok
